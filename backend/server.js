@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -7,7 +9,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const MONGODB_URI = "mongodb://20235401:Pt06041507@ac-gw9vjr7-shard-00-00.tzwhm8x.mongodb.net:27017,ac-gw9vjr7-shard-00-01.tzwhm8x.mongodb.net:27017,ac-gw9vjr7-shard-00-02.tzwhm8x.mongodb.net:27017/it4409?ssl=true&replicaSet=atlas-6aert1-shard-0&authSource=admin&retryWrites=true&w=majority&appName=it4409-20235401";
+const MONGODB_URI = process.env.MONGO_URI;
+
+if (!MONGODB_URI) {
+  console.error("Missing MONGO_URI in environment variables");
+  process.exit(1);
+}
 
 mongoose
   .connect(MONGODB_URI)
@@ -17,23 +24,23 @@ mongoose
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Tên không được để trống'],
-    minlength: [2, 'Tên phải có ít nhất 2 ký tự'],
+    required: [true, "Tên không được để trống"],
+    minlength: [2, "Tên phải có ít nhất 2 ký tự"],
     trim: true
   },
   age: {
     type: Number,
-    required: [true, 'Tuổi không được để trống'],
-    min: [0, 'Tuổi phải >= 0'],
+    required: [true, "Tuổi không được để trống"],
+    min: [0, "Tuổi phải >= 0"],
     validate: {
       validator: Number.isInteger,
-      message: 'Tuổi phải là số nguyên'
+      message: "Tuổi phải là số nguyên"
     }
   },
   email: {
     type: String,
-    required: [true, 'Email không được để trống'],
-    match: [/^\S+@\S+\.\S+$/, 'Email không hợp lệ'],
+    required: [true, "Email không được để trống"],
+    match: [/^\S+@\S+\.\S+$/, "Email không hợp lệ"],
     trim: true,
     unique: true
   },
@@ -49,11 +56,19 @@ const formatError = (err) => {
   if (err.code === 11000) {
     return "Email đã tồn tại";
   }
-  if (err.name === 'ValidationError') {
-    return Object.values(err.errors).map(val => val.message).join(', ');
+
+  if (err.name === "ValidationError") {
+    return Object.values(err.errors)
+      .map((val) => val.message)
+      .join(", ");
   }
+
   return err.message;
 };
+
+app.get("/", (req, res) => {
+  res.send("Backend User CRUD is running");
+});
 
 app.get("/api/users", async (req, res) => {
   try {
@@ -128,11 +143,10 @@ app.put("/api/users/:id", async (req, res) => {
     if (email !== undefined) updateData.email = email;
     if (address !== undefined) updateData.address = address;
 
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    const updatedUser = await User.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true
+    });
 
     if (!updatedUser) {
       return res.status(404).json({ error: "Không tìm thấy người dùng" });
@@ -167,6 +181,8 @@ app.delete("/api/users/:id", async (req, res) => {
   }
 });
 
-app.listen(3001, () => {
-  console.log("Server running on http://localhost:3001");
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
