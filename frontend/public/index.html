@@ -213,6 +213,7 @@
   <div id="root"></div>
 
   <script type="text/babel">
+    const API_URL = "https://be-web-3gnd.onrender.com/api/users";
     function SearchBar({ value, onChange }) {
       const [searchInput, setSearchInput] = React.useState(value);
 
@@ -353,8 +354,8 @@
         if (!validate()) return;
 
         const url = user
-          ? `http://localhost:3001/api/users/${user._id}`
-          : `http://localhost:3001/api/users`;
+          ? `${API_URL}/${user._id}`
+          : API_URL;
 
         const method = user ? "PUT" : "POST";
 
@@ -448,7 +449,7 @@
       const [editingUser, setEditingUser] = React.useState(null);
 
       const fetchUsers = () => {
-        const url = `http://localhost:3001/api/users?page=${page}&limit=${limit}&search=${search}`;
+        const url = `${API_URL}?page=${page}&limit=${limit}&search=${search}`;
 
         fetch(url)
           .then(async (res) => {
@@ -472,7 +473,7 @@
       }, [page, limit, search]);
 
       const deleteUser = (id) => {
-        fetch(`http://localhost:3001/api/users/${id}`, {
+        fetch(`${API_URL}/${id}`, {
           method: "DELETE"
         })
           .then(async (res) => {
